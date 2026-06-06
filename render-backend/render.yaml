@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: youtube-dl-backend
-    runtime: docker
-    plan: free
-    healthCheckPath: /api/health
