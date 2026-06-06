@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="YT Downloader">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>YouTube Downloader</title>
+<script src="/config.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #fff;
+  }
+  .container {
+    width: 100%;
+    max-width: 560px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #ff0000, #ff4444);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(255, 0, 0, 0.3);
+  }
+  .logo svg { width: 36px; height: 36px; fill: white; }
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 6px;
+  }
+  .input-group { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    outline: none;
+  }
+  input[type="text"]:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+  }
+  input[type="text"]::placeholder { color: rgba(255, 255, 255, 0.3); }
+  .api-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+  .save-api-btn {
+    min-width: 72px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .api-note {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .format-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+  }
+  .format-tab {
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+  .format-tab:hover { color: rgba(255, 255, 255, 0.8); }
+  .format-tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .quality-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .quality-chip {
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.25s ease;
+    user-select: none;
+  }
+  .quality-chip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+  .quality-chip.active {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.35);
+  }
+  .download-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .download-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+  }
+  .download-btn:active:not(:disabled) { transform: translateY(0); }
+  .download-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .status {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+  }
+  .status.show { display: flex; }
+  .status.info { background: rgba(102, 126, 234, 0.15); border: 1px solid rgba(102, 126, 234, 0.3); }
+  .status.success { background: rgba(46, 213, 115, 0.15); border: 1px solid rgba(46, 213, 115, 0.3); }
+  .status.error { background: rgba(255, 71, 87, 0.15); border: 1px solid rgba(255, 71, 87, 0.3); }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-wrap {
+    margin-top: 16px;
+    display: none;
+  }
+  .progress-wrap.show { display: block; }
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #f093fb, #f5576c);
+    background-size: 200% 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 5px;
+    animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 8px;
+  }
+  .progress-meta .phase { font-weight: 600; color: rgba(255, 255, 255, 0.85); }
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.3);
+  }
+  @media (max-width: 520px) {
+    body {
+      align-items: flex-start;
+      padding: 14px;
+      padding-top: max(14px, env(safe-area-inset-top));
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
+    }
+    .container {
+      min-height: calc(100vh - 28px);
+      border-radius: 18px;
+      padding: 24px 18px;
+    }
+    .header { margin-bottom: 24px; }
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+    }
+    h1 { font-size: 23px; }
+    input[type="text"] {
+      min-height: 48px;
+      font-size: 16px;
+    }
+    .api-row {
+      grid-template-columns: 1fr;
+    }
+    .save-api-btn {
+      min-height: 44px;
+    }
+    .format-tab,
+    .quality-chip,
+    .download-btn {
+      min-height: 46px;
+    }
+    .quality-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .quality-chip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    </div>
+    <h1>YouTube Downloader</h1>
+    <div class="subtitle">動画・音声を高品質でダウンロード</div>
+  </div>
+
+  <div class="input-group">
+    <label>API URL</label>
+    <div class="api-row">
+      <input type="text" id="apiBase" placeholder="https://your-service.onrender.com">
+      <button class="save-api-btn" id="saveApiBtn" type="button">保存</button>
+    </div>
+    <div class="api-note">RenderのバックエンドURL。保存後はこのアプリ内に記憶されます。</div>
+  </div>
+
+  <div class="input-group">
+    <label>YouTube URL</label>
+    <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=...">
+  </div>
+
+  <div class="input-group">
+    <label>フォーマット</label>
+    <div class="format-tabs">
+      <div class="format-tab active" data-format="mp4">MP4</div>
+      <div class="format-tab" data-format="mp3">MP3</div>
+      <div class="format-tab" data-format="wav">WAV</div>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label id="qualityLabel">画質</label>
+    <div class="quality-options" id="qualityOptions"></div>
+  </div>
+
+  <button class="download-btn" id="downloadBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    ダウンロード
+  </button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-meta">
+      <span class="phase" id="progressPhase">準備中</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div class="footer">Powered by yt-dlp</div>
+</div>
+
+<script>
+const QUALITY_OPTIONS = {
+  mp4: ['480p', '720p', '1080p', '2K', '4K'],
+  mp3: ['128Kbps', '256Kbps', '320Kbps'],
+  wav: ['標準品質']
+};
+const DEFAULT_QUALITY = { mp4: '720p', mp3: '256Kbps', wav: '標準品質' };
+
+let currentFormat = 'mp4';
+let currentQuality = DEFAULT_QUALITY[currentFormat];
+const configuredApiBase = (window.YTDL_API_BASE || '').trim();
+let apiBase = (localStorage.getItem('ytdlApiBase') || configuredApiBase).trim().replace(/\/+$/, '');
+
+const apiBaseEl = document.getElementById('apiBase');
+const saveApiBtn = document.getElementById('saveApiBtn');
+const qualityOptionsEl = document.getElementById('qualityOptions');
+const qualityLabelEl = document.getElementById('qualityLabel');
+const statusEl = document.getElementById('status');
+const progressWrap = document.getElementById('progressWrap');
+const progressFill = document.getElementById('progressFill');
+const progressPct = document.getElementById('progressPct');
+const progressPhase = document.getElementById('progressPhase');
+const downloadBtn = document.getElementById('downloadBtn');
+
+const PHASE_LABEL = {
+  starting: '準備中',
+  download: 'ダウンロード中',
+  video: '動画をダウンロード中',
+  audio: '音声をダウンロード中',
+  merging: '動画と音声を結合中',
+  extracting: '音声を抽出中',
+  done: '完了',
+};
+
+apiBaseEl.value = apiBase;
+
+function normalizeApiBase(value) {
+  return value.trim().replace(/\/+$/, '');
+}
+
+function apiUrl(path) {
+  return apiBase + path;
+}
+
+function saveApiBase() {
+  const next = normalizeApiBase(apiBaseEl.value);
+  if (!/^https:\/\/.+/.test(next)) {
+    showStatus('RenderのAPI URLは https:// から始まるURLを入力してください', 'error');
+    return;
+  }
+  apiBase = next;
+  localStorage.setItem('ytdlApiBase', apiBase);
+  showStatus('API URLを保存しました', 'success');
+}
+
+saveApiBtn.onclick = saveApiBase;
+
+function renderQualityOptions() {
+  qualityLabelEl.textContent = currentFormat === 'mp4' ? '画質' : (currentFormat === 'wav' ? '品質' : 'ビットレート');
+  qualityOptionsEl.innerHTML = '';
+  QUALITY_OPTIONS[currentFormat].forEach(q => {
+    const chip = document.createElement('div');
+    chip.className = 'quality-chip' + (q === currentQuality ? ' active' : '');
+    chip.textContent = q;
+    chip.onclick = () => {
+      currentQuality = q;
+      renderQualityOptions();
+    };
+    qualityOptionsEl.appendChild(chip);
+  });
+}
+
+document.querySelectorAll('.format-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentFormat = tab.dataset.format;
+    currentQuality = DEFAULT_QUALITY[currentFormat];
+    renderQualityOptions();
+  };
+});
+
+function showStatus(message, type = 'info', withSpinner = false) {
+  statusEl.className = 'status show ' + type;
+  statusEl.innerHTML = (withSpinner ? '<div class="spinner"></div>' : '') + '<div>' + message + '</div>';
+}
+
+let currentEventSource = null;
+
+function updateProgress(pct, phase) {
+  progressFill.style.width = pct + '%';
+  progressPct.textContent = pct.toFixed(1) + '%';
+  progressPhase.textContent = PHASE_LABEL[phase] || phase || '処理中';
+}
+
+async function startDownload() {
+  const url = document.getElementById('url').value.trim();
+  apiBase = normalizeApiBase(apiBaseEl.value || apiBase);
+  if (!apiBase) {
+    showStatus('先にRenderのAPI URLを保存してください', 'error');
+    return;
+  }
+  if (!url) { showStatus('YouTubeのURLを入力してください', 'error'); return; }
+  if (!/youtube\.com|youtu\.be/.test(url)) {
+    showStatus('有効なYouTube URLを入力してください', 'error');
+    return;
+  }
+
+  downloadBtn.disabled = true;
+  progressWrap.classList.add('show');
+  updateProgress(0, 'starting');
+  showStatus('ダウンロードを開始しています...', 'info', true);
+
+  try {
+    localStorage.setItem('ytdlApiBase', apiBase);
+    const startRes = await fetch(apiUrl('/api/start'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, format: currentFormat, quality: currentQuality })
+    });
+    if (!startRes.ok) {
+      const err = await startRes.json().catch(() => ({}));
+      throw new Error(err.error || '開始に失敗しました');
+    }
+    const { job_id } = await startRes.json();
+
+    await new Promise((resolve, reject) => {
+      if (currentEventSource) currentEventSource.close();
+      const es = new EventSource(apiUrl('/api/progress/' + job_id));
+      currentEventSource = es;
+      es.onmessage = (ev) => {
+        let d;
+        try { d = JSON.parse(ev.data); } catch (e) { return; }
+        updateProgress(d.progress || 0, d.phase);
+        showStatus((PHASE_LABEL[d.phase] || '処理中') + ' ' + (d.progress || 0).toFixed(1) + '%', 'info', true);
+        if (d.status === 'done') {
+          es.close(); currentEventSource = null;
+          resolve(job_id);
+        } else if (d.status === 'error') {
+          es.close(); currentEventSource = null;
+          reject(new Error(d.error || '失敗しました'));
+        }
+      };
+      es.onerror = () => {
+        es.close(); currentEventSource = null;
+        reject(new Error('進捗ストリームが切断されました'));
+      };
+    });
+
+    updateProgress(100, 'done');
+    showStatus('ファイルを保存しています...', 'info', true);
+    const a = document.createElement('a');
+    a.href = apiUrl('/api/file/' + job_id);
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => showStatus('ダウンロード完了!', 'success'), 400);
+  } catch (e) {
+    showStatus('エラー: ' + e.message, 'error');
+  } finally {
+    downloadBtn.disabled = false;
+    setTimeout(() => progressWrap.classList.remove('show'), 2500);
+  }
+}
+
+downloadBtn.onclick = startDownload;
+document.getElementById('url').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startDownload();
+});
+
+renderQualityOptions();
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
